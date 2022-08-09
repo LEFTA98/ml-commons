@@ -35,18 +35,20 @@ public class MLModel implements ToXContentObject {
     private Integer version;
     private String content;
     private User user;
+    private Integer chunkNumber;
 
     @Builder
-    public MLModel(String name, FunctionName algorithm, Integer version, String content, User user) {
+    public MLModel(String name, FunctionName algorithm, Integer version, String content, User user, Integer chunkNumber) {
         this.name = name;
         this.algorithm = algorithm;
         this.version = version;
         this.content = content;
         this.user = user;
+        this.chunkNumber = chunkNumber;
     }
 
     public MLModel(FunctionName algorithm, Model model) {
-        this(model.getName(), algorithm, model.getVersion(), Base64.getEncoder().encodeToString(model.getContent()), null);
+        this(model.getName(), algorithm, model.getVersion(), Base64.getEncoder().encodeToString(model.getContent()), null, null);
     }
 
     public MLModel(StreamInput input) throws IOException{
@@ -88,6 +90,9 @@ public class MLModel implements ToXContentObject {
         }
         if (content != null) {
             builder.field(MODEL_CONTENT, content);
+        }
+        if (chunkNumber != null) {
+            builder.field(CHUNK_NUMBER, chunkNumber);
         }
         if (user != null) {
             builder.field(USER, user);
@@ -141,5 +146,9 @@ public class MLModel implements ToXContentObject {
     public static MLModel fromStream(StreamInput in) throws IOException {
         MLModel mlModel = new MLModel(in);
         return mlModel;
+    }
+
+    public static String customModelId(String modelName, Integer version, Integer chunkNumber) {
+        return modelName + "_" + version + "_" + chunkNumber;
     }
 }

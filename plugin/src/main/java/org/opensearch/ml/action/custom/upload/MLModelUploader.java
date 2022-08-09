@@ -23,6 +23,7 @@ import org.opensearch.ml.task.MLTaskManager;
 import org.opensearch.threadpool.ThreadPool;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.PrivilegedActionException;
 import java.util.Base64;
 import java.util.concurrent.Semaphore;
@@ -50,39 +51,59 @@ public class MLModelUploader {
     }
 
     public void uploadModel(MLUploadInput mlUploadInput, MLTask mlTask) {
-        Semaphore semaphore = new Semaphore(1);
         String taskId = mlTask.getTaskId();
         mlTaskManager.add(mlTask);
 
-        AtomicInteger uploaded = new AtomicInteger(0);
-        threadPool.executor(TASK_THREAD_POOL).execute(() -> {
-            try {
-                String modelName = mlUploadInput.getName(); // get name of model
-                Integer version = mlUploadInput.getVersion(); // get version of model
-                String returnedString = customModelManager.readDownloadedChunk(modelName, version, mlUploadInput.getUrl(), ActionListener.wrap(toReturn -> {
-                    mlIndicesHandler.initModelIndexIfAbsent(ActionListener.wrap(res -> {
-                        System.out.println(Thread.currentThread().getName());
-                        semaphore.acquire();//TODO: check which thread are using, this will block thread
-                        File file = new File(toReturn);
-                        byte[] bytes = Files.toByteArray(file);
-                        Model model = new Model();
-                        model.setName(FunctionName.KMEANS.name());
-                        model.setVersion(1);
-                        model.setContent(bytes);
-                        int chunkNum = Integer.parseInt(file.getName());
-                        MLModel mlModel = MLModel.builder()
-                                .name(modelName)
-                                .algorithm(FunctionName.CUSTOM)
-                                .version(version)
-                                .chunkNumber(chunkNum)
-                                .totalChunks(nameList.size())
-                                .content(Base64.getEncoder().encodeToString(bytes))
-                                .build();
-                    }));
-                        }
-                ));
-            } catch (PrivilegedActionException e) {}
-        });
-    }
+        try {
+            String modelName = mlUploadInput.getName(); // get name of model
+            Integer version = mlUploadInput.getVersion(); // get version of model
+            customModelManager.readDownloadedChunk(modelName, version, mlUploadInput.getUrl(), mlUploadInput.getChunkNumber(), ActionListener.wrap(destFileName -> {
+                mlIndicesHandler.initModelIndexIfAbsent(ActionListener.wrap(res -> {
+                    byte[] bytes = mlUploadInput.getUrl();
+                    Model model = new Model();
+                    model.setName(FunctionName.KMEANS.name());
+                    model.setVersion(1);
+                    model.setContent(bytes);
+                    int chunkNum = mlUploadInput.getChunkNumber();
+                    MLModel mlModel = MLModel.builder()
+                            .name(modelName)
+                            .algorithm(FunctionName.CUSTOM)
+                            .version(version)
+                            .chunkNumber(chunkNum)
+                            .content(Base64.getEncoder().encodeToString(bytes))
+                            .build();
+                    IndexRequest indexRequest = new IndexRequest(ML_MODEL_INDEX);
+                    indexRequest.id(MLModel.customModelId(modelName, version, chunkNum));//TODO: limit model name size and not include "_"
+                    indexRequest.source(mlModel.toXContent(XContentBuilder.builder(XContentType.JSON.xContent()), ToXContent.EMPTY_PARAMS));
+                    indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
 
+                    client.index(indexRequest, ActionListener.wrap(r -> {
+                        log.info("Index model successfully {}", modelName);
+                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.STATE_FIELD, MLTaskState.COMPLETED), TIMEOUT_IN_MILLIS);
+                        mlTaskManager.remove(taskId);
+                    }, e -> {
+                        log.error("Failed to index model", e);
+                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+                                MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+                        mlTaskManager.remove(taskId);
+                    }));
+                }, ex -> {
+                    log.error("Failed to init model index", ex);
+                    mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(ex),
+                            MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+                    mlTaskManager.remove(taskId);
+                }));
+            }, e -> {
+                log.error("Failed to download model", e);
+                mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+                        MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+                mlTaskManager.remove(taskId);
+            }));
+        } catch (IOException e) {
+            log.error("Failed to upload model ", e);
+            mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+                    MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+            mlTaskManager.remove(taskId);
+        }
+    }
 }

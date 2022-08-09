@@ -97,13 +97,13 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
             mlTaskDispatcher.dispatchTask(ActionListener.wrap(node -> {
                 if (clusterService.localNode().getId().equals(node.getId())) {
                     // Execute ML task locally
-                    log.info("ylwudebug2: Upload model {} locally on node {}", mlUploadInput.getName(), node.getId());
+                    log.info("Upload model {} locally on node {}", mlUploadInput.getName(), node.getId());
                     mlModelUploader.uploadModel(mlUploadInput, mlTask);
                 } else {
                     // Execute ML task remotely
                     log.info("Upload model {} remotely on node {}", mlUploadInput.getName(), node.getId());
                     MLForwardRequest forwardRequest = new MLForwardRequest(new MLForwardInput(mlUploadInput.getName(), mlUploadInput.getVersion(), taskId,
-                            node.getId(), MLForwardRequestType.UPLOAD_MODEL, mlTask, mlUploadInput.getUrl()));
+                            node.getId(), MLForwardRequestType.UPLOAD_MODEL, mlTask, mlUploadInput.getUrl(), mlUploadInput.getChunkNumber()));
 
                     ActionListener<MLForwardResponse> myListener = ActionListener.wrap(res->{
                         log.info("Response from upload model node is " + res);

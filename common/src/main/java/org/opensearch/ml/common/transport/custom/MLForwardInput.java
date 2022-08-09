@@ -38,6 +38,7 @@ public class MLForwardInput implements ToXContentObject, Writeable {
     public static final String REQUEST_TYPE_FIELD = "request_type";
     public static final String ML_TASK_FIELD = "ml_task";
     public static final String URL_FIELD = "url";
+    public static final String CHUNK_NUMBER_FIELD = "chunk_number";
     public static final String PREDICT_INPUT_FIELD = "predict_input";
 
     // Algorithm name
@@ -49,11 +50,12 @@ public class MLForwardInput implements ToXContentObject, Writeable {
     private String workerNodeId;
     private MLForwardRequestType requestType;
     private MLTask mlTask;
-    private String url;
+    private byte[] url;
+    private Integer chunkNumber;
 //    MLPredictModelInput predictModelInput;
 
     @Builder(toBuilder = true)
-    public MLForwardInput(String name, Integer version, String taskId, String workerNodeId, MLForwardRequestType requestType, MLTask mlTask, String url) {
+    public MLForwardInput(String name, Integer version, String taskId, String workerNodeId, MLForwardRequestType requestType, MLTask mlTask, byte[] url, Integer chunkNumber) {
         this.name = name;
         this.version = version;
         this.taskId = taskId;
@@ -61,6 +63,7 @@ public class MLForwardInput implements ToXContentObject, Writeable {
         this.requestType = requestType;
         this.mlTask = mlTask;
         this.url = url;
+        this.chunkNumber = chunkNumber;
 //        this.predictModelInput = predictModelInput;
     }
 
@@ -72,7 +75,8 @@ public class MLForwardInput implements ToXContentObject, Writeable {
         this.taskId = in.readOptionalString();
         this.workerNodeId = in.readOptionalString();
         this.requestType = in.readEnum(MLForwardRequestType.class);
-        this.url = in.readOptionalString();
+        this.url = in.readByteArray();
+        this.chunkNumber = in.readOptionalInt();
         if (in.readBoolean()) {
             mlTask = new MLTask(in);
         }
@@ -89,7 +93,10 @@ public class MLForwardInput implements ToXContentObject, Writeable {
         out.writeOptionalString(taskId);
         out.writeOptionalString(workerNodeId);
         out.writeEnum(requestType);
-        out.writeOptionalString(url);
+        if (this.url != null) {
+            out.writeByteArray(url);
+        }
+        out.writeOptionalInt(chunkNumber);
         if (this.mlTask != null) {
             out.writeBoolean(true);
             mlTask.writeTo(out);
@@ -119,6 +126,9 @@ public class MLForwardInput implements ToXContentObject, Writeable {
         if (url != null) {
             builder.field(URL_FIELD, url);
         }
+        if (chunkNumber != null) {
+            builder.field(CHUNK_NUMBER_FIELD, chunkNumber);
+        }
 //        if (predictModelInput != null) {
 //            predictModelInput.toXContent(builder, params);
 //        }
@@ -134,7 +144,8 @@ public class MLForwardInput implements ToXContentObject, Writeable {
         String workerNodeId = null;
         MLForwardRequestType requestType = null;
         MLTask mlTask = null;
-        String url = null;
+        byte[] url = null;
+        Integer chunkNumber = null;
 //        MLPredictModelInput predictModelInput = null;
 
         ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.currentToken(), parser);
@@ -165,7 +176,10 @@ public class MLForwardInput implements ToXContentObject, Writeable {
                     mlTask = MLTask.parse(parser);
                     break;
                 case URL_FIELD:
-                    url = parser.text();
+                    url = parser.binaryValue();
+                    break;
+                case CHUNK_NUMBER_FIELD:
+                    chunkNumber = parser.intValue();
                     break;
 //                case PREDICT_INPUT_FIELD:
 //                    predictModelInput = MLPredictModelInput.parse(parser);
@@ -175,7 +189,7 @@ public class MLForwardInput implements ToXContentObject, Writeable {
                     break;
             }
         }
-        return new MLForwardInput(name, version, taskId, workerNodeId, requestType, mlTask, url);
+        return new MLForwardInput(name, version, taskId, workerNodeId, requestType, mlTask, url, chunkNumber);
     }
 
 
