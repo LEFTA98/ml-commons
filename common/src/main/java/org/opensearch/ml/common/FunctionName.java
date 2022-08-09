@@ -14,7 +14,8 @@ public enum FunctionName {
     FIT_RCF,
     BATCH_RCF,
     ANOMALY_LOCALIZATION,
-    RCF_SUMMARIZE;
+    RCF_SUMMARIZE,
+    CUSTOM;
 
     public static FunctionName from(String value) {
         try {

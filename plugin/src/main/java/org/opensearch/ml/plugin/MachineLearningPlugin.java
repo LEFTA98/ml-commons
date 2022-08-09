@@ -29,6 +29,7 @@ import org.opensearch.common.settings.SettingsFilter;
 import org.opensearch.common.xcontent.NamedXContentRegistry;
 import org.opensearch.env.Environment;
 import org.opensearch.env.NodeEnvironment;
+import org.opensearch.ml.action.custom.upload.TransportUploadModelAction;
 import org.opensearch.ml.action.execute.TransportExecuteTaskAction;
 import org.opensearch.ml.action.handler.MLSearchHandler;
 import org.opensearch.ml.action.models.DeleteModelTransportAction;
@@ -53,6 +54,7 @@ import org.opensearch.ml.common.input.parameter.rcf.BatchRCFParams;
 import org.opensearch.ml.common.input.parameter.rcf.FitRCFParams;
 import org.opensearch.ml.common.input.parameter.regression.LinearRegressionParams;
 import org.opensearch.ml.common.input.parameter.sample.SampleAlgoParams;
+import org.opensearch.ml.common.transport.custom.upload.MLUploadModelAction;
 import org.opensearch.ml.common.transport.execute.MLExecuteTaskAction;
 import org.opensearch.ml.common.transport.model.MLModelDeleteAction;
 import org.opensearch.ml.common.transport.model.MLModelGetAction;
@@ -130,7 +132,8 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
                 new ActionHandler<>(MLModelSearchAction.INSTANCE, SearchModelTransportAction.class),
                 new ActionHandler<>(MLTaskGetAction.INSTANCE, GetTaskTransportAction.class),
                 new ActionHandler<>(MLTaskDeleteAction.INSTANCE, DeleteTaskTransportAction.class),
-                new ActionHandler<>(MLTaskSearchAction.INSTANCE, SearchTaskTransportAction.class)
+                new ActionHandler<>(MLTaskSearchAction.INSTANCE, SearchTaskTransportAction.class),
+                new ActionHandler<>(MLUploadModelAction.INSTANCE, TransportUploadModelAction.class)
             );
     }
 
@@ -262,6 +265,7 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
         RestMLGetTaskAction restMLGetTaskAction = new RestMLGetTaskAction();
         RestMLDeleteTaskAction restMLDeleteTaskAction = new RestMLDeleteTaskAction();
         RestMLSearchTaskAction restMLSearchTaskAction = new RestMLSearchTaskAction();
+        RestMLCustomModelUploadAction restMLCustomModelUploadAction = new RestMLCustomModelUploadAction();
 
         return ImmutableList
             .of(
@@ -275,7 +279,8 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
                 restMLSearchModelAction,
                 restMLGetTaskAction,
                 restMLDeleteTaskAction,
-                restMLSearchTaskAction
+                restMLSearchTaskAction,
+                restMLCustomModelUploadAction
             );
     }
 

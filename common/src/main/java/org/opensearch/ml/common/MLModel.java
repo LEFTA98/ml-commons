@@ -26,6 +26,9 @@ public class MLModel implements ToXContentObject {
     public static final String MODEL_VERSION = "version";
     public static final String MODEL_CONTENT = "content";
     public static final String USER = "user";
+    public static final String CHUNK_NUMBER = "chunk_number";
+    public static final String TOTAL_CHUNKS = "total_chunks";
+    public static final String NEW_MODEL_CONTENT = "model_content";
 
     private String name;
     private FunctionName algorithm;
