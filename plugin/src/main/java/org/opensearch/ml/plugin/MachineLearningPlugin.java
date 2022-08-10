@@ -29,6 +29,7 @@ import org.opensearch.common.settings.SettingsFilter;
 import org.opensearch.common.xcontent.NamedXContentRegistry;
 import org.opensearch.env.Environment;
 import org.opensearch.env.NodeEnvironment;
+import org.opensearch.ml.action.custom.upload.MLModelUploader;
 import org.opensearch.ml.action.custom.upload.TransportUploadModelAction;
 import org.opensearch.ml.action.execute.TransportExecuteTaskAction;
 import org.opensearch.ml.action.handler.MLSearchHandler;
@@ -67,6 +68,7 @@ import org.opensearch.ml.common.transport.training.MLTrainingTaskAction;
 import org.opensearch.ml.common.transport.trainpredict.MLTrainAndPredictionTaskAction;
 import org.opensearch.ml.engine.MLEngineClassLoader;
 import org.opensearch.ml.engine.algorithms.anomalylocalization.AnomalyLocalizerImpl;
+import org.opensearch.ml.engine.algorithms.custom.CustomModelManager;
 import org.opensearch.ml.engine.algorithms.sample.LocalSampleCalculator;
 import org.opensearch.ml.indices.MLIndicesHandler;
 import org.opensearch.ml.indices.MLInputDatasetHandler;
@@ -111,6 +113,8 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
     private MLTrainAndPredictTaskRunner mlTrainAndPredictTaskRunner;
     private MLExecuteTaskRunner mlExecuteTaskRunner;
     private IndexUtils indexUtils;
+    private CustomModelManager customModelManager;
+    private MLModelUploader mlModelUploader;
 
     private Client client;
     private ClusterService clusterService;
@@ -179,46 +183,46 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
 
         MLTaskDispatcher mlTaskDispatcher = new MLTaskDispatcher(clusterService, client);
         mlTrainingTaskRunner = new MLTrainingTaskRunner(
-            threadPool,
-            clusterService,
-            client,
-            mlTaskManager,
-            mlStats,
-            mlIndicesHandler,
-            mlInputDatasetHandler,
-            mlTaskDispatcher,
-            mlCircuitBreakerService
+                threadPool,
+                clusterService,
+                client,
+                mlTaskManager,
+                mlStats,
+                mlIndicesHandler,
+                mlInputDatasetHandler,
+                mlTaskDispatcher,
+                mlCircuitBreakerService
         );
         mlPredictTaskRunner = new MLPredictTaskRunner(
-            threadPool,
-            clusterService,
-            client,
-            mlTaskManager,
-            mlStats,
-            mlInputDatasetHandler,
-            mlTaskDispatcher,
-            mlCircuitBreakerService,
-            xContentRegistry
+                threadPool,
+                clusterService,
+                client,
+                mlTaskManager,
+                mlStats,
+                mlInputDatasetHandler,
+                mlTaskDispatcher,
+                mlCircuitBreakerService,
+                xContentRegistry
         );
         mlTrainAndPredictTaskRunner = new MLTrainAndPredictTaskRunner(
-            threadPool,
-            clusterService,
-            client,
-            mlTaskManager,
-            mlStats,
-            mlInputDatasetHandler,
-            mlTaskDispatcher,
-            mlCircuitBreakerService
+                threadPool,
+                clusterService,
+                client,
+                mlTaskManager,
+                mlStats,
+                mlInputDatasetHandler,
+                mlTaskDispatcher,
+                mlCircuitBreakerService
         );
         mlExecuteTaskRunner = new MLExecuteTaskRunner(
-            threadPool,
-            clusterService,
-            client,
-            mlTaskManager,
-            mlStats,
-            mlInputDatasetHandler,
-            mlTaskDispatcher,
-            mlCircuitBreakerService
+                threadPool,
+                clusterService,
+                client,
+                mlTaskManager,
+                mlStats,
+                mlInputDatasetHandler,
+                mlTaskDispatcher,
+                mlCircuitBreakerService
         );
 
         // Register thread-safe ML objects here.
@@ -231,17 +235,20 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
         MLSearchHandler mlSearchHandler = new MLSearchHandler(client, xContentRegistry);
 
         return ImmutableList
-            .of(
-                mlStats,
-                mlTaskManager,
-                mlIndicesHandler,
-                mlInputDatasetHandler,
-                mlTrainingTaskRunner,
-                mlPredictTaskRunner,
-                mlTrainAndPredictTaskRunner,
-                mlExecuteTaskRunner,
-                mlSearchHandler
-            );
+                .of(
+                        mlStats,
+                        mlTaskManager,
+                        mlIndicesHandler,
+                        mlInputDatasetHandler,
+                        mlTrainingTaskRunner,
+                        mlPredictTaskRunner,
+                        mlTrainAndPredictTaskRunner,
+                        mlExecuteTaskRunner,
+                        mlSearchHandler,
+                        mlTaskDispatcher,
+                        customModelManager,
+                        mlModelUploader
+                );
     }
 
     @Override
