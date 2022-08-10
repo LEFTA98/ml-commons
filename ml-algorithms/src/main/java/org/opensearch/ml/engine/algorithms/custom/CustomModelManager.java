@@ -26,7 +26,7 @@ public class CustomModelManager {
             destFileName = outputPath + chunkName;
 
             inStream.read(temp, 0, CHUNK_SIZE);
-            write(temp, destFileName);
+            write(url, destFileName);
             listener.onResponse(destFileName);
         } catch (Exception e) {
             listener.onFailure(e);

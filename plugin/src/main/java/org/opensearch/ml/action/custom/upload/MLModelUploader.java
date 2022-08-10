@@ -57,7 +57,7 @@ public class MLModelUploader {
         try {
             String modelName = mlUploadInput.getName(); // get name of model
             Integer version = mlUploadInput.getVersion(); // get version of model
-            customModelManager.readDownloadedChunk(modelName, version, mlUploadInput.getUrl(), mlUploadInput.getChunkNumber(), ActionListener.wrap(destFileName -> {
+//            customModelManager.readDownloadedChunk(modelName, version, mlUploadInput.getUrl(), mlUploadInput.getChunkNumber(), ActionListener.wrap(destFileName -> {
                 mlIndicesHandler.initModelIndexIfAbsent(ActionListener.wrap(res -> {
                     byte[] bytes = mlUploadInput.getUrl();
                     Model model = new Model();
@@ -93,13 +93,13 @@ public class MLModelUploader {
 //                            MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
 //                    mlTaskManager.remove(taskId);
                 }));
-            }, e -> {
-                log.error("Failed to download model", e);
-//                mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
-//                        MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
-//                mlTaskManager.remove(taskId);
-            }));
-        } catch (IOException e) {
+//            }, e -> {
+//                log.error("Failed to download model", e);
+////                mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+////                        MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+////                mlTaskManager.remove(taskId);
+//            }));
+        } catch (Exception e) {
             log.error("Failed to upload model ", e);
 //            mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
 //                    MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
