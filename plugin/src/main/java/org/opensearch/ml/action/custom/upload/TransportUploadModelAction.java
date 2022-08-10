@@ -90,37 +90,7 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
                 .state(MLTaskState.CREATED)//TODO: mark task as done or failed
                 .workerNode(clusterService.localNode().getId())
                 .build();
-        mlTaskManager.createMLTask(mlTask, ActionListener.wrap(response -> {
-            String taskId = response.getId();
-            mlTask.setTaskId(taskId);
-
-            mlTaskDispatcher.dispatchTask(ActionListener.wrap(node -> {
-                if (clusterService.localNode().getId().equals(node.getId())) {
-                    // Execute ML task locally
-                    log.info("Upload model {} locally on node {}", mlUploadInput.getName(), node.getId());
-                    mlModelUploader.uploadModel(mlUploadInput, mlTask);
-                } else {
-                    // Execute ML task remotely
-                    log.info("Upload model {} remotely on node {}", mlUploadInput.getName(), node.getId());
-                    MLForwardRequest forwardRequest = new MLForwardRequest(new MLForwardInput(mlUploadInput.getName(), mlUploadInput.getVersion(), taskId,
-                            node.getId(), MLForwardRequestType.UPLOAD_MODEL, mlTask, mlUploadInput.getUrl(), mlUploadInput.getChunkNumber()));
-
-                    ActionListener<MLForwardResponse> myListener = ActionListener.wrap(res->{
-                        log.info("Response from upload model node is " + res);
-                    }, ex->{
-                        log.error("Failed to receive response form upload model node", ex);
-                    });
-                    transportService.sendRequest(node, MLForwardAction.NAME, forwardRequest, new ActionListenerResponseHandler<>(myListener, MLForwardResponse::new));
-                }
-                listener.onResponse(new LoadModelResponse(taskId, MLTaskState.CREATED.name()));
-            }, e -> {
-                log.error("Failed to dispatch upload model task ", e);
-                listener.onFailure(e);
-            }));
-        }, exception -> {
-            log.error("Failed to create upload model task", exception);
-            listener.onFailure(exception);
-        }));
+        mlModelUploader.uploadModel(mlUploadInput, mlTask);
 
     }
 }

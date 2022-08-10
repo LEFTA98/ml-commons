@@ -60,7 +60,10 @@ public class MLUploadInput implements ToXContentObject, Writeable {
         this.name = in.readString();
         this.version = in.readInt();
         this.chunkNumber = in.readInt();
-        this.url = in.readByteArray();
+        boolean uploadModel = in.readBoolean();
+        if (uploadModel) {
+            this.url = in.readByteArray();
+        }
     }
 
     @Override
@@ -69,7 +72,12 @@ public class MLUploadInput implements ToXContentObject, Writeable {
         out.writeString(name);
         out.writeInt(version);
         out.writeInt(chunkNumber);
-        out.writeByteArray(url);
+        if (url == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            out.writeByteArray(url);
+        }
     }
 
     @Override
@@ -84,12 +92,12 @@ public class MLUploadInput implements ToXContentObject, Writeable {
         return builder;
     }
 
-    public static MLUploadInput parse(XContentParser parser) throws IOException {
+    public static MLUploadInput parse(XContentParser parser, byte[] content) throws IOException {
         String algorithmName = null;
         String name = null;
         Integer version = null;
         Integer chunkNumber = null;
-        byte[] url = null;
+        byte[] url;
 
         ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.currentToken(), parser);
         while (parser.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -109,14 +117,12 @@ public class MLUploadInput implements ToXContentObject, Writeable {
                 case CHUNK_NUMBER_FIELD:
                     chunkNumber = parser.intValue();
                     break;
-                case URL_FIELD:
-                    url = parser.binaryValue();
-                    break;
                 default:
                     parser.skipChildren();
                     break;
             }
         }
+        url = content;
         return new MLUploadInput(name, version, url, chunkNumber);
     }
 

@@ -61,7 +61,7 @@ public class MLModelUploader {
                 mlIndicesHandler.initModelIndexIfAbsent(ActionListener.wrap(res -> {
                     byte[] bytes = mlUploadInput.getUrl();
                     Model model = new Model();
-                    model.setName(FunctionName.KMEANS.name());
+                    model.setName(FunctionName.CUSTOM.name());
                     model.setVersion(1);
                     model.setContent(bytes);
                     int chunkNum = mlUploadInput.getChunkNumber();
