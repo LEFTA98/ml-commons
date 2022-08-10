@@ -39,7 +39,7 @@ public class RestMLCustomModelUploadAction extends BaseRestHandler {
     @Override
     public List<Route> routes() {
         return ImmutableList
-                .of(new Route(RestRequest.Method.POST, String.format(Locale.ROOT, "%s/custom_model/upload", ML_BASE_URI)));
+                .of(new Route(RestRequest.Method.POST, String.format(Locale.ROOT, "%s/custom_model/upload/%s/%s/%s", ML_BASE_URI, "name", "version", "chunk_number")));
     }
 
     @Override
