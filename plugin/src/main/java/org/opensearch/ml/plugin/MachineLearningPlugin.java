@@ -224,6 +224,8 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
                 mlTaskDispatcher,
                 mlCircuitBreakerService
         );
+        customModelManager = new CustomModelManager();
+        mlModelUploader = new MLModelUploader(customModelManager, mlIndicesHandler, mlTaskManager, threadPool, client);
 
         // Register thread-safe ML objects here.
         LocalSampleCalculator localSampleCalculator = new LocalSampleCalculator(client, settings);
