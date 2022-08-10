@@ -16,6 +16,7 @@ import org.opensearch.ml.common.MLModel;
 import org.opensearch.ml.common.MLTask;
 import org.opensearch.ml.common.MLTaskState;
 import org.opensearch.ml.common.Model;
+import org.opensearch.ml.common.transport.custom.load.LoadModelResponse;
 import org.opensearch.ml.common.transport.custom.upload.MLUploadInput;
 import org.opensearch.ml.engine.algorithms.custom.CustomModelManager;
 import org.opensearch.ml.indices.MLIndicesHandler;
@@ -50,7 +51,7 @@ public class MLModelUploader {
         this.client = client;
     }
 
-    public void uploadModel(MLUploadInput mlUploadInput, MLTask mlTask) {
+    public void uploadModel(MLUploadInput mlUploadInput, MLTask mlTask, ActionListener<LoadModelResponse> listener) {
         String taskId = mlTask.getTaskId();
 //        mlTaskManager.add(mlTask);
 
@@ -81,17 +82,20 @@ public class MLModelUploader {
                         log.info("Index model successfully {}", modelName);
 //                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.STATE_FIELD, MLTaskState.COMPLETED), TIMEOUT_IN_MILLIS);
 //                        mlTaskManager.remove(taskId);
+                        listener.onResponse(new LoadModelResponse("0", "1"));
                     }, e -> {
                         log.error("Failed to index model", e);
 //                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
 //                                MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
 //                        mlTaskManager.remove(taskId);
+                        listener.onFailure(e);
                     }));
                 }, ex -> {
                     log.error("Failed to init model index", ex);
 //                    mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(ex),
 //                            MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
 //                    mlTaskManager.remove(taskId);
+                    listener.onFailure(ex);
                 }));
 //            }, e -> {
 //                log.error("Failed to download model", e);
@@ -104,6 +108,7 @@ public class MLModelUploader {
 //            mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
 //                    MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
 //            mlTaskManager.remove(taskId);
+            listener.onFailure(e);
         }
     }
 }

@@ -90,7 +90,6 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
                 .state(MLTaskState.CREATED)//TODO: mark task as done or failed
                 .workerNode(clusterService.localNode().getId())
                 .build();
-        mlModelUploader.uploadModel(mlUploadInput, mlTask);
-
+        mlModelUploader.uploadModel(mlUploadInput, mlTask, listener);
     }
 }
