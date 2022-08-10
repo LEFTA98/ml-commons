@@ -14,6 +14,7 @@ import org.opensearch.action.support.HandledTransportAction;
 import org.opensearch.client.Client;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.inject.Inject;
+import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.ml.common.FunctionName;
 import org.opensearch.ml.common.MLTask;
 import org.opensearch.ml.common.MLTaskState;
@@ -80,16 +81,21 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
         MLUploadModelRequest uploadModelRequest = MLUploadModelRequest.fromActionRequest(request);
         MLUploadInput mlUploadInput = uploadModelRequest.getMlUploadInput();
 
-        MLTask mlTask = MLTask.builder()
-                .async(true)
-                .taskType(MLTaskType.UPLOAD_MODEL)
-                .functionName(FunctionName.CUSTOM)
-                .inputType(MLInputDataType.SEARCH_QUERY)
-                .createTime(Instant.now())
-                .lastUpdateTime(Instant.now())
-                .state(MLTaskState.CREATED)//TODO: mark task as done or failed
-                .workerNode(clusterService.localNode().getId())
-                .build();
-        mlModelUploader.uploadModel(mlUploadInput, mlTask, listener);
+        try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
+            MLTask mlTask = MLTask.builder()
+                    .async(true)
+                    .taskType(MLTaskType.UPLOAD_MODEL)
+                    .functionName(FunctionName.CUSTOM)
+                    .inputType(MLInputDataType.SEARCH_QUERY)
+                    .createTime(Instant.now())
+                    .lastUpdateTime(Instant.now())
+                    .state(MLTaskState.CREATED)//TODO: mark task as done or failed
+                    .workerNode(clusterService.localNode().getId())
+                    .build();
+            mlModelUploader.uploadModel(mlUploadInput, mlTask, listener);
+        } catch (Exception e) {
+            log.error("Failed to upload ML model", e);
+            listener.onFailure(e);
+        }
     }
 }
