@@ -52,7 +52,7 @@ public class MLModelUploader {
 
     public void uploadModel(MLUploadInput mlUploadInput, MLTask mlTask) {
         String taskId = mlTask.getTaskId();
-        mlTaskManager.add(mlTask);
+//        mlTaskManager.add(mlTask);
 
         try {
             String modelName = mlUploadInput.getName(); // get name of model
@@ -79,31 +79,31 @@ public class MLModelUploader {
 
                     client.index(indexRequest, ActionListener.wrap(r -> {
                         log.info("Index model successfully {}", modelName);
-                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.STATE_FIELD, MLTaskState.COMPLETED), TIMEOUT_IN_MILLIS);
-                        mlTaskManager.remove(taskId);
+//                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.STATE_FIELD, MLTaskState.COMPLETED), TIMEOUT_IN_MILLIS);
+//                        mlTaskManager.remove(taskId);
                     }, e -> {
                         log.error("Failed to index model", e);
-                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
-                                MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
-                        mlTaskManager.remove(taskId);
+//                        mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+//                                MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+//                        mlTaskManager.remove(taskId);
                     }));
                 }, ex -> {
                     log.error("Failed to init model index", ex);
-                    mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(ex),
-                            MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
-                    mlTaskManager.remove(taskId);
+//                    mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(ex),
+//                            MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+//                    mlTaskManager.remove(taskId);
                 }));
             }, e -> {
                 log.error("Failed to download model", e);
-                mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
-                        MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
-                mlTaskManager.remove(taskId);
+//                mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+//                        MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+//                mlTaskManager.remove(taskId);
             }));
         } catch (IOException e) {
             log.error("Failed to upload model ", e);
-            mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
-                    MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
-            mlTaskManager.remove(taskId);
+//            mlTaskManager.updateMLTask(taskId, ImmutableMap.of(MLTask.ERROR_FIELD, ExceptionUtils.getStackTrace(e),
+//                    MLTask.STATE_FIELD, MLTaskState.FAILED), TIMEOUT_IN_MILLIS);
+//            mlTaskManager.remove(taskId);
         }
     }
 }
