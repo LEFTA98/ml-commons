@@ -56,10 +56,18 @@ public class RestMLCustomModelUploadAction extends BaseRestHandler {
      */
     @VisibleForTesting
     MLUploadModelRequest getRequest(RestRequest request) throws IOException {
-        XContentParser parser = request.contentParser();
+//        XContentParser parser = request.contentParser();
+        String name = request.param("name");
+        System.out.println(name);
+        String version = request.param("version");
+        System.out.println(version);
+        String chunk_number = request.param("chunk_number");
+        System.out.println(chunk_number);
         byte[] content = request.content().streamInput().readAllBytes();
-        ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.nextToken(), parser);
-        MLUploadInput mlInput = MLUploadInput.parse(parser, content);
+        System.out.println(content.length);
+//        ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.nextToken(), parser);
+//        MLUploadInput mlInput = MLUploadInput.parse(parser, content);
+        MLUploadInput mlInput = new MLUploadInput(name, Integer.parseInt(version), content, Integer.parseInt(chunk_number));
 
         return new MLUploadModelRequest(mlInput);
     }
