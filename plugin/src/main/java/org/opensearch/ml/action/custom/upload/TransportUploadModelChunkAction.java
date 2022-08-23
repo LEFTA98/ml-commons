@@ -7,7 +7,6 @@ package org.opensearch.ml.action.custom.upload;
 
 import lombok.extern.log4j.Log4j2;
 import org.opensearch.action.ActionListener;
-import org.opensearch.action.ActionListenerResponseHandler;
 import org.opensearch.action.ActionRequest;
 import org.opensearch.action.support.ActionFilters;
 import org.opensearch.action.support.HandledTransportAction;
@@ -20,15 +19,10 @@ import org.opensearch.ml.common.MLTask;
 import org.opensearch.ml.common.MLTaskState;
 import org.opensearch.ml.common.MLTaskType;
 import org.opensearch.ml.common.dataset.MLInputDataType;
-import org.opensearch.ml.common.transport.custom.MLForwardAction;
-import org.opensearch.ml.common.transport.custom.MLForwardInput;
-import org.opensearch.ml.common.transport.custom.MLForwardRequest;
-import org.opensearch.ml.common.transport.custom.MLForwardRequestType;
-import org.opensearch.ml.common.transport.custom.MLForwardResponse;
 import org.opensearch.ml.common.transport.custom.load.LoadModelResponse;
-import org.opensearch.ml.common.transport.custom.upload.MLUploadInput;
-import org.opensearch.ml.common.transport.custom.upload.MLUploadModelAction;
-import org.opensearch.ml.common.transport.custom.upload.MLUploadModelRequest;
+import org.opensearch.ml.common.transport.custom.upload.MLUploadChunkInput;
+import org.opensearch.ml.common.transport.custom.upload.MLUploadModelChunkAction;
+import org.opensearch.ml.common.transport.custom.upload.MLUploadModelChunkRequest;
 import org.opensearch.ml.engine.algorithms.custom.CustomModelManager;
 import org.opensearch.ml.indices.MLIndicesHandler;
 import org.opensearch.ml.task.MLTaskDispatcher;
@@ -40,7 +34,7 @@ import org.opensearch.transport.TransportService;
 import java.time.Instant;
 
 @Log4j2
-public class TransportUploadModelAction extends HandledTransportAction<ActionRequest, LoadModelResponse> {
+public class TransportUploadModelChunkAction extends HandledTransportAction<ActionRequest, LoadModelResponse> {
     TransportService transportService;
     CustomModelManager customModelManager;
     MLIndicesHandler mlIndicesHandler;
@@ -49,10 +43,10 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
     ThreadPool threadPool;
     Client client;
     MLTaskDispatcher mlTaskDispatcher;
-    MLModelUploader mlModelUploader;
+    MLModelChunkUploader mlModelUploader;
 
     @Inject
-    public TransportUploadModelAction(
+    public TransportUploadModelChunkAction(
             TransportService transportService,
             ActionFilters actionFilters,
             CustomModelManager customModelManager,
@@ -62,9 +56,9 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
             ThreadPool threadPool,
             Client client,
             MLTaskDispatcher mlTaskDispatcher,
-            MLModelUploader mlModelUploader
+            MLModelChunkUploader mlModelUploader
     ) {
-        super(MLUploadModelAction.NAME, transportService, actionFilters, MLUploadModelRequest::new);
+        super(MLUploadModelChunkAction.NAME, transportService, actionFilters, MLUploadModelChunkRequest::new);
         this.transportService = transportService;
         this.customModelManager = customModelManager;
         this.mlIndicesHandler = mlIndicesHandler;
@@ -78,8 +72,8 @@ public class TransportUploadModelAction extends HandledTransportAction<ActionReq
 
     @Override
     protected void doExecute(Task task, ActionRequest request, ActionListener<LoadModelResponse> listener) {
-        MLUploadModelRequest uploadModelRequest = MLUploadModelRequest.fromActionRequest(request);
-        MLUploadInput mlUploadInput = uploadModelRequest.getMlUploadInput();
+        MLUploadModelChunkRequest uploadModelRequest = MLUploadModelChunkRequest.fromActionRequest(request);
+        MLUploadChunkInput mlUploadInput = uploadModelRequest.getMlUploadInput();
 
         try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
             MLTask mlTask = MLTask.builder()

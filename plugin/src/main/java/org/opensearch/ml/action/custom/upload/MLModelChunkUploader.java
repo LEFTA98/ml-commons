@@ -1,9 +1,6 @@
 package org.opensearch.ml.action.custom.upload;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.support.WriteRequest;
@@ -14,27 +11,20 @@ import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.ml.common.FunctionName;
 import org.opensearch.ml.common.MLModel;
 import org.opensearch.ml.common.MLTask;
-import org.opensearch.ml.common.MLTaskState;
 import org.opensearch.ml.common.Model;
 import org.opensearch.ml.common.transport.custom.load.LoadModelResponse;
-import org.opensearch.ml.common.transport.custom.upload.MLUploadInput;
+import org.opensearch.ml.common.transport.custom.upload.MLUploadChunkInput;
 import org.opensearch.ml.engine.algorithms.custom.CustomModelManager;
 import org.opensearch.ml.indices.MLIndicesHandler;
 import org.opensearch.ml.task.MLTaskManager;
 import org.opensearch.threadpool.ThreadPool;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.PrivilegedActionException;
 import java.util.Base64;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.opensearch.ml.common.CommonValue.ML_MODEL_INDEX;
-import static org.opensearch.ml.plugin.MachineLearningPlugin.TASK_THREAD_POOL;
 
 @Log4j2
-public class MLModelUploader {
+public class MLModelChunkUploader {
 
     public static final int TIMEOUT_IN_MILLIS = 5000;
     private final CustomModelManager customModelManager;
@@ -43,7 +33,7 @@ public class MLModelUploader {
     private final ThreadPool threadPool;
     private final Client client;
 
-    public MLModelUploader(CustomModelManager customModelManager, MLIndicesHandler mlIndicesHandler, MLTaskManager mlTaskManager, ThreadPool threadPool, Client client) {
+    public MLModelChunkUploader(CustomModelManager customModelManager, MLIndicesHandler mlIndicesHandler, MLTaskManager mlTaskManager, ThreadPool threadPool, Client client) {
         this.customModelManager = customModelManager;
         this.mlIndicesHandler = mlIndicesHandler;
         this.mlTaskManager = mlTaskManager;
@@ -51,7 +41,7 @@ public class MLModelUploader {
         this.client = client;
     }
 
-    public void uploadModel(MLUploadInput mlUploadInput, MLTask mlTask, ActionListener<LoadModelResponse> listener) {
+    public void uploadModel(MLUploadChunkInput mlUploadInput, MLTask mlTask, ActionListener<LoadModelResponse> listener) {
         String taskId = mlTask.getTaskId();
 //        mlTaskManager.add(mlTask);
 

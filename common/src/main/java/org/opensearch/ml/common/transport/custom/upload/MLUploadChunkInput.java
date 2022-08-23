@@ -22,15 +22,15 @@ import java.util.Objects;
 import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
 
 /**
- * ML input data: algirithm name, parameters and input data set.
+ * ML input data: algorithm name, parameters and input data set.
  */
 @Data
-public class MLUploadInput implements ToXContentObject, Writeable {
+public class MLUploadChunkInput implements ToXContentObject, Writeable {
 
     public static final String ALGORITHM_FIELD = "algorithm";
     public static final String NAME_FIELD = "name";
     public static final String VERSION_FIELD = "version";
-    public static final String URL_FIELD = "url";
+    public static final String CONTENT_FIELD = "url";
     public static final String CHUNK_NUMBER_FIELD = "chunk_number";
 
     // Algorithm name
@@ -42,7 +42,7 @@ public class MLUploadInput implements ToXContentObject, Writeable {
     private Integer chunkNumber;
 
     @Builder(toBuilder = true)
-    public MLUploadInput(String name, Integer version, byte[] url, Integer chunkNumber) {
+    public MLUploadChunkInput(String name, Integer version, byte[] url, Integer chunkNumber) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(version);
         Objects.requireNonNull(url);
@@ -55,7 +55,7 @@ public class MLUploadInput implements ToXContentObject, Writeable {
     }
 
 
-    public MLUploadInput(StreamInput in) throws IOException {
+    public MLUploadChunkInput(StreamInput in) throws IOException {
         this.algorithm = in.readEnum(FunctionName.class);
         this.name = in.readString();
         this.version = in.readInt();
@@ -87,17 +87,15 @@ public class MLUploadInput implements ToXContentObject, Writeable {
         builder.field(NAME_FIELD, name);
         builder.field(VERSION_FIELD, version);
         builder.field(CHUNK_NUMBER_FIELD, chunkNumber);
-        builder.field(URL_FIELD, url);
+        builder.field(CONTENT_FIELD, url);
         builder.endObject();
         return builder;
     }
 
-    public static MLUploadInput parse(XContentParser parser, byte[] content) throws IOException {
-        String algorithmName = null;
+    public static MLUploadChunkInput parse(XContentParser parser, byte[] content) throws IOException {
         String name = null;
         Integer version = null;
         Integer chunkNumber = null;
-        byte[] url;
 
         ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.currentToken(), parser);
         while (parser.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -105,9 +103,6 @@ public class MLUploadInput implements ToXContentObject, Writeable {
             parser.nextToken();
 
             switch (fieldName) {
-                case ALGORITHM_FIELD:
-                    algorithmName = parser.text().toUpperCase(Locale.ROOT);
-                    break;
                 case NAME_FIELD:
                     name = parser.text();
                     break;
@@ -122,8 +117,7 @@ public class MLUploadInput implements ToXContentObject, Writeable {
                     break;
             }
         }
-        url = content;
-        return new MLUploadInput(name, version, url, chunkNumber);
+        return new MLUploadChunkInput(name, version, content, chunkNumber);
     }
 
 

@@ -27,21 +27,21 @@ import static org.opensearch.action.ValidateActions.addValidationError;
 @Getter
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @ToString
-public class MLUploadModelRequest extends ActionRequest {
+public class MLUploadModelChunkRequest extends ActionRequest {
 
     /**
      * the name of algorithm
      */
-    MLUploadInput mlUploadInput;
+    MLUploadChunkInput mlUploadInput;
 
     @Builder
-    public MLUploadModelRequest(MLUploadInput mlUploadInput) {
+    public MLUploadModelChunkRequest(MLUploadChunkInput mlUploadInput) {
         this.mlUploadInput = mlUploadInput;
     }
 
-    public MLUploadModelRequest(StreamInput in) throws IOException {
+    public MLUploadModelChunkRequest(StreamInput in) throws IOException {
         super(in);
-        this.mlUploadInput = new MLUploadInput(in);
+        this.mlUploadInput = new MLUploadChunkInput(in);
     }
 
     @Override
@@ -60,16 +60,16 @@ public class MLUploadModelRequest extends ActionRequest {
         this.mlUploadInput.writeTo(out);
     }
 
-    public static MLUploadModelRequest fromActionRequest(ActionRequest actionRequest) {
-        if (actionRequest instanceof MLUploadModelRequest) {
-            return (MLUploadModelRequest) actionRequest;
+    public static MLUploadModelChunkRequest fromActionRequest(ActionRequest actionRequest) {
+        if (actionRequest instanceof MLUploadModelChunkRequest) {
+            return (MLUploadModelChunkRequest) actionRequest;
         }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              OutputStreamStreamOutput osso = new OutputStreamStreamOutput(baos)) {
             actionRequest.writeTo(osso);
             try (StreamInput input = new InputStreamStreamInput(new ByteArrayInputStream(baos.toByteArray()))) {
-                return new MLUploadModelRequest(input);
+                return new MLUploadModelChunkRequest(input);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to parse ActionRequest into MLTrainingTaskRequest", e);
