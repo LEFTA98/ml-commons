@@ -114,7 +114,7 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
     private MLExecuteTaskRunner mlExecuteTaskRunner;
     private IndexUtils indexUtils;
     private CustomModelManager customModelManager;
-    private MLModelChunkUploader mlModelUploader;
+    private MLModelChunkUploader mlModelChunkUploader;
 
     private Client client;
     private ClusterService clusterService;
@@ -224,8 +224,13 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
                 mlTaskDispatcher,
                 mlCircuitBreakerService
         );
+        mlModelChunkUploader = new MLModelChunkUploader(
+                customModelManager,
+                mlIndicesHandler,
+                mlTaskManager,
+                threadPool,
+                client);
         customModelManager = new CustomModelManager();
-        mlModelUploader = new MLModelChunkUploader(customModelManager, mlIndicesHandler, mlTaskManager, threadPool, client);
 
         // Register thread-safe ML objects here.
         LocalSampleCalculator localSampleCalculator = new LocalSampleCalculator(client, settings);
@@ -249,7 +254,7 @@ public class MachineLearningPlugin extends Plugin implements ActionPlugin {
                         mlSearchHandler,
                         mlTaskDispatcher,
                         customModelManager,
-                        mlModelUploader
+                        mlModelChunkUploader
                 );
     }
 
